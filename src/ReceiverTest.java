@@ -11,6 +11,8 @@
  *@date: 2017-11-7 下午1:11:58
  *@version 1.0
  */
+import java.util.Date;
+
 import javax.jms.Connection;  
 import javax.jms.ConnectionFactory;  
 import javax.jms.DeliveryMode;
@@ -44,7 +46,8 @@ public class ReceiverTest {
         connectionFactory = new ActiveMQConnectionFactory(  
                 ActiveMQConnection.DEFAULT_USER,  
                 ActiveMQConnection.DEFAULT_PASSWORD, "tcp://localhost:61616?jms.redeliveryPolicy.maximumRedeliveries=-1");
-        //开启无限重投
+        //开启无限重投 
+        //&jms.prefetchPolicy.queuePrefetch=200 预取
         try {  
             // 构造从工厂得到连接对象  
             connection = connectionFactory.createConnection();  
@@ -54,8 +57,9 @@ public class ReceiverTest {
             session = connection.createSession(Boolean.TRUE,  
                     Session.AUTO_ACKNOWLEDGE);  
             // 获取session注意参数值xingbo.xu-queue是一个服务器的queue，须在在ActiveMq的console配置  
-            destination = session.createQueue("testQueue?consumer.prefetchSize=200"); 
+            destination = session.createQueue("testQueue?consumer.prefetchSize=1"); 
 //            destination = session.createTopic("testTopic"); 
+            
             consumer = session.createConsumer(destination);  
 //            while (true) {  
                 // 设置接收者接收消息的等待时间，不管有没有收到，到了时间，断开连接，为了便于测试，这里定为100s  
@@ -87,9 +91,10 @@ public class ReceiverTest {
 	            	 try {
 						System.out.println("messageID:"+text.getJMSMessageID());
 						System.out.println("Test收到消息" + text.getText());
-						if(Integer.parseInt(text.getText())>=10){
-							throw new RuntimeException("抛了个异常");
-						}
+						System.out.println(new Date().getTime());
+//						if(Integer.parseInt(text.getText())>=10){
+//							throw new RuntimeException("抛了个异常");
+//						}
 //						message.acknowledge();
 //						System.out.println("客户手动代码确认！！！");
 						session.commit();//确认消费了 事务型消费者才要这样
